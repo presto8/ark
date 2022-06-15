@@ -15,7 +15,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        protect=src.cli:main
+        protect=src.cli:entrypoint
     ''',
 
     author="Preston Hunt",
