@@ -11,5 +11,6 @@ The concepts to be tested include:
   "protected"
 - Distributed peer-to-peer backup with friends and family
 
-Protect is motivated by the many pioneers in the chunk-based backup space,
-including borg, duplicacy, hashbackup, restic, and kopia.
+Protect stands on the shoulders of and is motivated by the many pioneers in the
+chunk-based backup space, including borg, duplicacy, hashbackup, restic, and
+kopia.
