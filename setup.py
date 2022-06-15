@@ -11,7 +11,6 @@ setup(
         'pytest-mypy',
         'pyyaml',
         'colorama',
-        'gitignore_parser',
         'pid',
     ],
     entry_points='''
