@@ -12,6 +12,7 @@ setup(
         'pyyaml',
         'colorama',
         'pid',
+        'coverage',
     ],
     entry_points='''
         [console_scripts]
