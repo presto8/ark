@@ -1,14 +1,9 @@
-#!/usr/bin/env python
-
-#from protect import nar
-from helpers import create_file
-from base64 import b16decode
 import os
 import stat
 
+from types import SimpleNamespace
 
-def xxd_to_bin(s):
-    return b16decode(s.replace("\n", "").replace(" ", "").upper())
+from helpers import create_file
 
 
 def create_test_files(tmp_path):
@@ -19,8 +14,9 @@ def create_test_files(tmp_path):
     zzz = foo / "zzz"
     os.symlink("bar", zzz)
 
+    return SimpleNamespace(foo=foo, bar=bar, zzz=zzz)
+
 
 def test_regular_file(tmp_path):
-    create_test_files(tmp_path)
-    print(tmp_path)
-    assert False
+    files = create_test_files(tmp_path)
+    print(files.foo.name)
