@@ -10,6 +10,9 @@ The concepts to be tested include:
 - Backup and tracking to multiple destinations before reporting a file as
   "protected"
 - Distributed peer-to-peer backup with friends and family
+- Cloud-first storage design for backup files, taking into account the unique
+  characteristics of cloud storage providers
+- Optional use of hardware-based security keys like SoloKey or YubiKey
 
 Protect stands on the shoulders of and is motivated by the many pioneers in the
 chunk-based backup space, including borg, duplicacy, hashbackup, restic, and
