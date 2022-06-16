@@ -5,6 +5,7 @@ setup(
     version='0.1',
     python_requires='>=3.8',
     packages=find_packages(),
+    package_data={'protect': ['py.typed']},
     include_package_data=True,
     install_requires=[
         'pytest',
