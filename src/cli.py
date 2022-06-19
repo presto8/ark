@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import fcntl
 import os
 import subprocess
 import sys
-from typing import NamedTuple, Optional, TypeVar
+from typing import NamedTuple
 
 HELP = """
-Protect by Preston Hunt <me@prestonhunt.com>
-https://github.com/presto8/protect
+Ark by Preston Hunt <me@prestonhunt.com>
+https://github.com/presto8/ark
 
 An experimental chunk-based backup program. This is a proof-of-concept
 implementation to explore concepts which may not be addressed fully in
