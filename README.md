@@ -1,10 +1,12 @@
 # Ark
 
-> _Make yourself an ark of cypress wood; make rooms in it and coat it with
-> pitch inside and out. You are to bring into the ark two of all living
-> creatures, male and female, to keep them alive with you. Two of every kind
-> of bird, of every kind of animal and of every kind of creature that moves
-> along the ground will come to you to be kept alive._
+<img src="assets/ark.svg" alt="Noah's Ark" align="right" style="width: 200px;" />
+
+_Make yourself an ark of cypress wood; make rooms in it and coat it with
+pitch inside and out. You are to bring into the ark two of all living
+creatures, male and female, to keep them alive with you. Two of every kind
+of bird, of every kind of animal and of every kind of creature that moves
+along the ground will come to you to be kept alive._
 
 An experimental chunk-based backup program. Ark is a proof-of-concept
 implementation to explore concepts which may not be addressed fully in
