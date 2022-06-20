@@ -2,6 +2,7 @@ import os
 
 from types import SimpleNamespace
 
+from src import fs
 from helpers import create_file
 
 
@@ -19,3 +20,6 @@ def create_test_files(tmp_path):
 def test_regular_file(tmp_path):
     files = create_test_files(tmp_path)
     print(files.foo.name)
+
+    for f in fs.scan_fs(files.foo):
+        print(f)

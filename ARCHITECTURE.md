@@ -49,7 +49,8 @@ Storage
   use cbor or messagepack
 
 Crypto
-  use GPG/PGP
+  use GPG/PGP? AGE? DIY
+  Mix in fs UUID and pubkey
 
 
 The basic premise us to store metadata about the backup encrypted on the remote  file name has info so simply listing or exosfenxe check reveals info
