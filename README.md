@@ -25,3 +25,14 @@ The concepts to be tested include:
 Ark stands on the shoulders of and is motivated by the many pioneers in the
 chunk-based backup space, including borg, duplicacy, hashbackup, restic, and
 kopia.
+
+## Commands
+
+Tentative list of major commands:
+
+* ark backup
+* ark restore
+* ark verify
+* ark list|ls
+* ark find
+* ark remote
