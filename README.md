@@ -36,3 +36,9 @@ Tentative list of major commands:
 * ark list|ls
 * ark find
 * ark remote
+* ark status
+
+## Tech Stack
+* Python (pytest, coverage)
+* blake2b
+* MessagePack
