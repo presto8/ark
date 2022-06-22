@@ -7,6 +7,7 @@ set -euo pipefail
 main() {
     parse_args "$@"
     check_venv
+    check_dependencies
 
     cmd=(coverage run -m pytest --exitfirst "${ARGS[@]}")
 
@@ -56,6 +57,14 @@ check_venv() {
         echo automatically activating virtualenv before running tests
         source "$script_path/venv/bin/activate"
     fi
+}
+
+check_dependencies() {
+    for module in pytest coverage; do
+        if ! python -m $module --version; then
+            pip install $module
+        fi
+    done
 }
 
 main "$@"
