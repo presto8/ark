@@ -15,6 +15,7 @@ main() {
     else
         "${cmd[@]}"
         check_flake8
+        check_mypy
         coverage report
     fi
 }
@@ -25,6 +26,11 @@ check_flake8() {
     flake8 "${SOURCE_DIRS[@]}" --select=E9,F63,F7,F82 --show-source --statistics
     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     flake8 "${SOURCE_DIRS[@]}" --exit-zero --max-complexity=10 --max-line-length=160 --statistics
+}
+
+check_mypy() {
+    mypy --install-types --non-interactive
+    mypy "${SOURCE_DIRS[@]}" ||:
 }
 
 parse_args() {
