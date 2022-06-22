@@ -3,16 +3,14 @@ from setuptools import setup, find_packages
 setup(
     name='ark',
     version='0.1',
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     packages=find_packages(),
     package_data={'ark': ['py.typed']},
     include_package_data=True,
     install_requires=[
+        'msgpack-python',
         'pytest',
         'pytest-mypy',
-        'pyyaml',
-        'colorama',
-        'pid',
         'coverage',
     ],
     entry_points='''
