@@ -41,4 +41,6 @@ Tentative list of major commands:
 ## Tech Stack
 * Python (pytest, coverage)
 * blake2b
+* AES-GCM-256 (maybe: AES-SIV)
 * MessagePack
+* GPG/PGP (maybe: age)
