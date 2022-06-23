@@ -72,8 +72,7 @@ class FsParent(FsEntry):
         try:
             child_tpch = [x.tpch for x in self.children]
             child_tpch.sort()
-            payload = msgpack.packb(child_tpch)
-            return crypto.blake2b(payload)
+            return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, child_tpch]))
         except TypeError:
             return None
 
