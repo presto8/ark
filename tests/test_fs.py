@@ -98,7 +98,7 @@ def test_tpch_simple_dir(tmp_path):
     joined = [c0_tpch, c1_tpch]
     joined.sort()
 
-    parent_tpch = crypto.blake2b(msgpack.packb(joined))
+    parent_tpch = crypto.blake2b(msgpack.packb([tmp_path.name, 200, joined]))
     assert parent_tpch == parent.tpch
 
 
@@ -120,3 +120,25 @@ def test_tpch_deep_dir(tmp_path):
     parent.update()
 
     assert len(parent.children) == 2
+
+    # tpch for child 0
+    c0 = parent.children[0]
+    c0.ctime_ns = 100
+    c0_b2 = crypto.blake2b(b"hello\n")
+    c0_tpch = crypto.blake2b(msgpack.packb(["hello.txt", 100, c0_b2]))
+    assert c0.tpch == c0_tpch
+
+    # tpch for child 1
+    c1 = parent.children[1].children[0]
+    c1.ctime_ns = 200
+    c1_b2 = crypto.blake2b(b"world\n")
+    c1_tpch = crypto.blake2b(msgpack.packb(["world.txt", 200, c1_b2]))
+    assert c1.tpch == c1_tpch
+
+    # tpch for subdir
+    s0 = parent.children[1]
+    s0_tpch = crypto.blake2b(msgpack.packb(["subdir", 200, [c1_tpch]]))
+    assert s0.tpch == s0_tpch
+
+    joined = [c0_tpch, c1_tpch]
+    joined.sort()
