@@ -1,3 +1,10 @@
+remote filename - ark object
+
+H() = CHF(PK || ...)
+
+arkpath = f.H(timestamp).arkhash
+  contents: blocks to reconstruct ?
+
 All backup data stored by Ark is encrypted with the repository's public
 key. And a design goal of Ark is to be able to back up without needing the
 private key.
@@ -49,7 +56,8 @@ Storage
   use cbor or messagepack
 
 Crypto
-  use GPG/PGP
+  use GPG/PGP? AGE? DIY
+  Mix in fs UUID and pubkey
 
 
 The basic premise us to store metadata about the backup encrypted on the remote  file name has info so simply listing or exosfenxe check reveals info
