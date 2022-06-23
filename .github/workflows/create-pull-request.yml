@@ -1,0 +1,12 @@
+name: Create Pull Request
+on:
+  push:
+    branches:
+      - f/*
+
+jobs:
+  createPullRequest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4.0.4
