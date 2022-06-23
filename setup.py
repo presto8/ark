@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='ark',
     version='0.1',
-    python_requires='>=3.9',
+    python_requires='>=3.10',
     packages=find_packages(),
     package_data={'ark': ['py.typed']},
     include_package_data=True,
