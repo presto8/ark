@@ -14,6 +14,7 @@ currently available backup programs.
 
 The concepts to be tested include:
 
+- Test
 - Backup and tracking to multiple destinations before reporting a file as
   "protected"
 - Mandatory use of asymmetric (public key) cryptography
