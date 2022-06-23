@@ -21,6 +21,7 @@ The concepts to be tested include:
 - Cloud-first storage design for backup files, taking into account the unique
   characteristics of cloud storage providers
 - Optional use of hardware-based security keys like SoloKey or YubiKey
+throw away
 
 Ark stands on the shoulders of and is motivated by the many pioneers in the
 chunk-based backup space, including borg, duplicacy, hashbackup, restic, and
