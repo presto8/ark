@@ -9,9 +9,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'msgpack-python',
-        'pytest',
-        'pytest-mypy',
-        'coverage',
     ],
     entry_points='''
         [console_scripts]
