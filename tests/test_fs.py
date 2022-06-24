@@ -3,24 +3,7 @@ import msgpack
 from types import SimpleNamespace
 from src import crypto
 from src import fs
-from helpers import create_file
-
-
-def create_test_files(dir_path, structure):
-    for name, value in structure.items():
-        if isinstance(value, str):
-            if value.startswith("link:"):
-                # create a symlink
-                os.symlink(value[5:], dir_path / name)
-            else:
-                # create a file
-                create_file(dir_path / name, value)
-        elif isinstance(value, dict):
-            # directory - recurse
-            create_test_files(dir_path / name, value)
-        else:
-            # error
-            raise
+from helpers import create_test_files
 
 
 def test_simple_files(tmp_path):
