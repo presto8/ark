@@ -82,19 +82,15 @@ class FsParent(FsEntry):
 
 
 def get_parent(path, max_depth=-1) -> FsParent:
-    print('parent')
     hostname = platform.node()
     fsid = 'TODO'
     children = []
     next_child: FsEntry
     for entry in os.scandir(path):
-        print(entry)
         if entry.is_dir(follow_symlinks=False):
-            print(max_depth)
             if max_depth == 0:  # stop recursion
                 next_child = FsParent(hostname=hostname, fsid=fsid, path=Path(entry))
             else:
-                print(max_depth)
                 next_child = get_parent(entry, max_depth=max_depth - 1)
         else:
             next_child = FsChild(path=Path(entry))
