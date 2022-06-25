@@ -52,8 +52,7 @@ class Store:
 
     def have(self, obj) -> bool:
         name, _ = parse_object(obj)
-        return os.path.exists(self.path / name)
-
+        return (self.path / name).exists()
 
     # guid: str
     # label: Optional[str] = None
