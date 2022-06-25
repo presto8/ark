@@ -21,12 +21,31 @@ def test_simple_files(tmp_path):
 
 def test_symlink(tmp_path):
     # add a symlink
-    create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n", "default.txt": "link:world.txt"})
+    create_test_files(tmp_path, {"hello.txt": "hello\n", "default.txt": "link:hello.txt"})
     parent = fs.get_parent(tmp_path)
 
-    assert len(parent.children) == 3
-    # ctime_ns of parent is max(ctime_ns) of children
+    assert len(parent.children) == 2
+    # ctime_ns of parent is ctime_ns of the newest child
     assert parent.ctime_ns == os.lstat(tmp_path / "default.txt").st_ctime_ns
+
+    # ptch for hello
+    hello = parent.children[1]
+    assert hello.path.name == "hello.txt"
+    hello_b2 = crypto.blake2b(b"hello\n")
+    hello_ptch = crypto.blake2b(msgpack.packb(["hello.txt", hello.path.stat().st_ctime_ns, hello_b2]))
+    assert hello.ptch == hello_ptch
+
+    # ptch for child 1
+    default = parent.children[0]
+    assert default.path.name == "default.txt"
+    link_b2 = crypto.blake2b(b"hello.txt")
+    link_ptch = crypto.blake2b(msgpack.packb(["default.txt", default.path.stat().st_ctime_ns, link_b2]))
+    assert default.ptch == link_ptch
+
+    joined = sorted([default.ptch, hello.ptch])
+
+    parent_ptch = crypto.blake2b(msgpack.packb([tmp_path.name, parent.ctime_ns, joined]))
+    assert parent_ptch == parent.ptch
 
 
 def test_b2(tmp_path):
