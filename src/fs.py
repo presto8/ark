@@ -34,7 +34,7 @@ class FsChild(FsEntry):
 
     def update(self, ctime_ns=True, b2=True):
         if ctime_ns:
-            self.ctime_ns = self.path.stat(follow_symlinks=False).st_ctime_ns
+            self.ctime_ns = os.stat(self.path, follow_symlinks=False).st_ctime_ns
         if b2:
             if self.path.is_symlink():
                 contents = str(self.path.readlink()).encode()
@@ -47,10 +47,18 @@ class FsChild(FsEntry):
         return msgpack.packb([self.path.name, self.ctime_ns, self.b2])
 
     @property
-    def tpch(self):
-        if not self.b2:
+    def pth(self):
+        "path-time-hash"
+        if self.ctime_ns is None:
             return None
-        return crypto.blake2b(self._msgpack)
+        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns]))[:32]
+
+    @property
+    def ptch(self):
+        "path-time-contents-hash"
+        if self.ctime_ns is None or self.b2 is None:
+            return None
+        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, self.b2]))
 
 
 @dataclass
@@ -68,9 +76,9 @@ class FsParent(FsEntry):
             return None
 
     @property
-    def tpch(self) -> Optional[bytes]:
+    def ptch(self) -> Optional[bytes]:
         try:
-            child_tpch = [x.tpch for x in self.children]
+            child_tpch = [x.ptch for x in self.children]
             child_tpch.sort()
             return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, child_tpch]))
         except TypeError:
@@ -98,7 +106,4 @@ def get_parent(path, max_depth=-1) -> FsParent:
         children.append(next_child)
 
     children.sort(key=lambda x: x.path.name)
-    for child in children:
-        print(child)
-
     return FsParent(hostname=hostname, fsid=fsid, path=Path(path), children=children, loaded=True)
