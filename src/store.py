@@ -29,7 +29,6 @@ class Store:
     path: Path
 
     def __post_init__(self):
-        print(type(self.path))
         os.makedirs(self.path)
 
     def put(self, obj) -> str:
