@@ -2,9 +2,8 @@ import msgpack
 import os
 import platform
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Optional
 from . import crypto
 
 
@@ -24,40 +23,55 @@ class ArkObject:
 
 @dataclass
 class FsEntry:
+    """FsEntry captures a moment in time of a filesystem entry. The ctime and
+    hash are computed once and then cached after that. If the underling
+    filesystem changes, the cached values will be returned. To detect
+    filesystem changes, create a new FsEntry object."""
     path: Path
+
+    # abstract methods
+
+    def ctime_ns(self) -> int:
+        raise
+
+    def pth(self):
+        "path-time-hash"
+        raise
+
+    def ptch(self):
+        "path-time-contents-hash"
+        raise
 
 
 @dataclass
 class FsChild(FsEntry):
-    ctime_ns: Optional[int] = None
-    b2: Optional[bytes] = None
-
-    def update(self, ctime_ns=True, b2=True):
-        if ctime_ns:
-            self.ctime_ns = os.stat(self.path, follow_symlinks=False).st_ctime_ns
-        if b2:
-            if self.path.is_symlink():
-                contents = str(self.path.readlink()).encode()
-            else:
-                contents = open(self.path, "rb").read()
-            self.b2 = crypto.blake2b(contents)
+    def __post_init__(self):
+        self._b2 = None
 
     @property
-    def _msgpack(self):
-        return msgpack.packb([self.path.name, self.ctime_ns, self.b2])
+    def ctime_ns(self) -> int:
+        # pathlib caches this after this first call
+        return self.path.stat().st_ctime_ns
+
+    @property
+    def b2(self):
+        if self._b2 is None:
+            self._update()
+        return self._b2
+
+    def _update(self):
+        if self.path.is_symlink():
+            contents = str(self.path.readlink()).encode()
+        else:
+            contents = open(self.path, "rb").read()
+        self._b2 = crypto.blake2b(contents)
 
     @property
     def pth(self):
-        "path-time-hash"
-        if self.ctime_ns is None:
-            return None
-        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns]))[:32]
+        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns]))
 
     @property
     def ptch(self):
-        "path-time-contents-hash"
-        if self.ctime_ns is None or self.b2 is None:
-            return None
         return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, self.b2]))
 
 
@@ -69,24 +83,18 @@ class FsParent(FsEntry):
     loaded: bool = False
 
     @property
-    def ctime_ns(self) -> Optional[int]:
-        try:
-            return max([x.ctime_ns for x in self.children])
-        except TypeError:
-            return None
+    def ctime_ns(self) -> int:
+        return max([x.ctime_ns for x in self.children])
 
     @property
-    def ptch(self) -> Optional[bytes]:
-        try:
-            child_tpch = [x.ptch for x in self.children]
-            child_tpch.sort()
-            return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, child_tpch]))
-        except TypeError:
-            return None
+    def pth(self) -> bytes:
+        child_vals = sorted([x.pth for x in self.children])
+        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, child_vals]))
 
-    def update(self):
-        for child in self.children:
-            child.update()
+    @property
+    def ptch(self) -> bytes:
+        child_vals = sorted([x.ptch for x in self.children])
+        return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, child_vals]))
 
 
 def get_parent(path, max_depth=-1) -> FsParent:
@@ -102,7 +110,6 @@ def get_parent(path, max_depth=-1) -> FsParent:
                 next_child = get_parent(entry, max_depth=max_depth - 1)
         else:
             next_child = FsChild(path=Path(entry))
-            next_child.update(b2=False)
         children.append(next_child)
 
     children.sort(key=lambda x: x.path.name)
