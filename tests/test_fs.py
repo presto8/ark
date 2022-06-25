@@ -136,3 +136,13 @@ def test_ptch_deep_dir(tmp_path):
 
     joined = [c0_ptch, c1_ptch]
     joined.sort()
+
+
+def test_stop_recursion(tmp_path):
+    create_test_files(tmp_path, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n", "anothersub": {"hola.txt": "hola\n"}}})
+
+    parent = fs.get_parent(tmp_path, max_depth=0)
+    assert len(parent.children) == 2
+    file_children = [x for x in parent.children if isinstance(x, fs.FsChild)]
+    assert len(file_children) == 1
+    assert parent.children[1].loaded is False
