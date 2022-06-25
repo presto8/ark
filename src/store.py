@@ -16,7 +16,7 @@ def b64d(data):
 
 
 def parse_object(obj) -> tuple[str, bytes]:
-    if isinstance(obj, fs.FsChild):
+    if isinstance(obj, fs.FsEntry):
         return f"{b64e(obj.pth)}_{b64e(obj.ptch)}", b""
     elif isinstance(obj, str):
         return obj, b""
@@ -34,11 +34,7 @@ class Store:
 
     def put(self, obj) -> str:
         "Returns name of path on store"
-        if isinstance(obj, fs.FsChild):
-            name = f"{b64e(obj.pth)}_{b64e(obj.ptch)}"
-            data = b""
-        else:
-            raise
+        name, data = parse_object(obj)
         self.putb(name, data)
         return name
 
