@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
+import inspect
 import sys
+from pathlib import Path
+from . import ark
 
 HELP = """
 Ark by Preston Hunt <me@prestonhunt.com>
@@ -35,10 +38,23 @@ def parse_args():
     return args
 
 
+def cli_mapper(args):
+    func = getattr(ark, args.command.replace("-", "_"))
+    sig = inspect.signature(func)
+    func_args = sig.parameters.keys()
+    missing_args = [arg for arg in func_args if arg not in arg]
+    if missing_args:
+        raise Fail(f"missing arguments for {func}: {missing_args}")
+    pass_args = {k: v for k, v in args.__dict__.items() if k in func_args}
+    if 'pathspec' in pass_args.keys():
+        pass_args['pathspec'] = [Path(path) for path in pass_args['pathspec']]
+    return func(**pass_args)
+
+
 def main():
     args = parse_args()
     if args.command:
-        print("TODO command:", args)
+        cli_mapper(args)
     else:
         print(args)
 
