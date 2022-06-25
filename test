@@ -17,6 +17,7 @@ main() {
         check_flake8
         check_mypy
         coverage report
+        coverage html
     fi
 }
 
