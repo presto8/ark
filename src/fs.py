@@ -3,26 +3,11 @@ import os
 import platform
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 from . import crypto
 
 
 @dataclass
-class ArkObject:
-    @property
-    def path(self):
-        pass
-
-    @property
-    def arkhash(self):
-        if self.is_parent:
-            return None
-        payload = [self.path.name, self.ctime_ns, self.b2]
-        return crypto.blake2b(msgpack.dumps(payload))
-
-
-@dataclass
-class FsEntry:
+class FsEntry:  # pragma: no cover
     """FsEntry captures a moment in time of a filesystem entry. The ctime and
     hash are computed once and then cached after that. If the underling
     filesystem changes, the cached values will be returned. To detect
