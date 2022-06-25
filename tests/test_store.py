@@ -1,3 +1,4 @@
+import pytest
 from src import store
 
 
@@ -27,3 +28,8 @@ def test_base64():
     assert store.b64d("Zm9vYg==") == "foob"
     assert store.b64d("Zm9vYmE=") == "fooba"
     assert store.b64d("Zm9vYmFy") == "foobar"
+
+
+def test_parse_throw():
+    with pytest.raises(Exception):
+        store.parse_object([])
