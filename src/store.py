@@ -39,7 +39,6 @@ class Store:
 
     def getb(self, name: str) -> bytes:
         return open(self.path / name, "rb").read()
-        return open(self.path / b64e(name), "rb").read()
 
     def putb(self, name: str, data: bytes):
         with open(self.path / name, "wb") as f:
