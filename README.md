@@ -33,8 +33,8 @@ Tentative list of major commands:
 * ark backup
 * ark restore
 * ark verify
-* ark list|ls
-* ark find
+* ark list | ark ls
+* ark find | ark grep
 * ark remote
 * ark status
 
