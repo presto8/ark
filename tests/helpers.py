@@ -33,6 +33,4 @@ def create_test_files(dir_path, structure):
             create_test_files(dir_path / name, value)
         else:
             # error
-            raise
-
-
+            raise  # pragma: no cover
