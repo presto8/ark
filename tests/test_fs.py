@@ -15,7 +15,7 @@ def test_simple_files(tmp_path):
     # children must be sorted alphabetically by name
     assert parent.children[0].path.name == "hello.txt"
     assert parent.children[1].path.name == "world.txt"
-    assert parent.tpch is None
+    assert parent.ptch is None
     # ctime_ns of parent is max(ctime_ns) of children
     assert parent.ctime_ns == (tmp_path / "world.txt").stat().st_ctime_ns
 
@@ -26,7 +26,7 @@ def test_symlink(tmp_path):
     parent = fs.get_parent(tmp_path)
 
     assert len(parent.children) == 3
-    assert parent.tpch is None
+    assert parent.ptch is None
     # ctime_ns of parent is max(ctime_ns) of children
     assert parent.ctime_ns == os.lstat(tmp_path / "default.txt").st_ctime_ns
 
@@ -47,7 +47,7 @@ def test_msgpack_file(tmp_path):
     parent = fs.get_parent(tmp_path)
     parent.update()
 
-    # msgpack and tpch for child 1
+    # msgpack and ptch for child 1
     c0 = parent.children[1]
     assert c0.path.name == "hello.txt"
     c0.ctime_ns = 100
@@ -56,72 +56,72 @@ def test_msgpack_file(tmp_path):
     payload = ["hello.txt", 100, c0_b2]
     expected = msgpack.packb(payload)
     assert c0._msgpack == expected
-    assert c0.tpch == crypto.blake2b(expected)
+    assert c0.ptch == crypto.blake2b(expected)
 
 
-def test_tpch_simple_dir(tmp_path):
+def test_ptch_simple_dir(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
     parent = fs.get_parent(tmp_path)
     parent.update()
 
-    # tpch for child 0
+    # ptch for child 0
     c0 = parent.children[0]
     c0.ctime_ns = 100
     c0_b2 = crypto.blake2b(b"hello\n")
-    c0_tpch = crypto.blake2b(msgpack.packb(["hello.txt", 100, c0_b2]))
-    assert c0.tpch == c0_tpch
+    c0_ptch = crypto.blake2b(msgpack.packb(["hello.txt", 100, c0_b2]))
+    assert c0.ptch == c0_ptch
 
-    # tpch for child 1
+    # ptch for child 1
     c1 = parent.children[1]
     c1.ctime_ns = 200
     c1_b2 = crypto.blake2b(b"world\n")
-    c1_tpch = crypto.blake2b(msgpack.packb(["world.txt", 200, c1_b2]))
-    assert c1.tpch == c1_tpch
+    c1_ptch = crypto.blake2b(msgpack.packb(["world.txt", 200, c1_b2]))
+    assert c1.ptch == c1_ptch
 
-    joined = [c0_tpch, c1_tpch]
+    joined = [c0_ptch, c1_ptch]
     joined.sort()
 
-    parent_tpch = crypto.blake2b(msgpack.packb([tmp_path.name, 200, joined]))
-    assert parent_tpch == parent.tpch
+    parent_ptch = crypto.blake2b(msgpack.packb([tmp_path.name, 200, joined]))
+    assert parent_ptch == parent.ptch
 
 
-def test_tpch_timestamp_change(tmp_path):
+def test_ptch_timestamp_change(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
     parent = fs.get_parent(tmp_path)
     parent.update()
 
-    tpch1 = parent.tpch
-    assert parent.tpch is not None
+    ptch1 = parent.ptch
+    assert parent.ptch is not None
 
     parent.children[1].ctime_ns = 200
-    assert parent.tpch != tpch1
+    assert parent.ptch != ptch1
 
 
-def test_tpch_deep_dir(tmp_path):
+def test_ptch_deep_dir(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n"}})
     parent = fs.get_parent(tmp_path)
     parent.update()
 
     assert len(parent.children) == 2
 
-    # tpch for child 0
+    # ptch for child 0
     c0 = parent.children[0]
     c0.ctime_ns = 100
     c0_b2 = crypto.blake2b(b"hello\n")
-    c0_tpch = crypto.blake2b(msgpack.packb(["hello.txt", 100, c0_b2]))
-    assert c0.tpch == c0_tpch
+    c0_ptch = crypto.blake2b(msgpack.packb(["hello.txt", 100, c0_b2]))
+    assert c0.ptch == c0_ptch
 
-    # tpch for child 1
+    # ptch for child 1
     c1 = parent.children[1].children[0]
     c1.ctime_ns = 200
     c1_b2 = crypto.blake2b(b"world\n")
-    c1_tpch = crypto.blake2b(msgpack.packb(["world.txt", 200, c1_b2]))
-    assert c1.tpch == c1_tpch
+    c1_ptch = crypto.blake2b(msgpack.packb(["world.txt", 200, c1_b2]))
+    assert c1.ptch == c1_ptch
 
-    # tpch for subdir
+    # ptch for subdir
     s0 = parent.children[1]
-    s0_tpch = crypto.blake2b(msgpack.packb(["subdir", 200, [c1_tpch]]))
-    assert s0.tpch == s0_tpch
+    s0_ptch = crypto.blake2b(msgpack.packb(["subdir", 200, [c1_ptch]]))
+    assert s0.ptch == s0_ptch
 
-    joined = [c0_tpch, c1_tpch]
+    joined = [c0_ptch, c1_ptch]
     joined.sort()
