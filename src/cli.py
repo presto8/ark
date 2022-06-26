@@ -16,7 +16,7 @@ currently available backup programs.
 """
 
 
-def parse_args():
+def parse_args(argv):
     parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--verbose', default=False, action='store_true', help='show more detailed messages')
     parser.add_argument('--debug', action='store_true')
@@ -28,7 +28,7 @@ def parse_args():
     x.add_argument('pathspec', nargs='+', default=('.',), help="paths to process")
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
 
-    args, unknown_args = parser.parse_known_args()
+    args, unknown_args = parser.parse_known_args(argv)
     args.unknown_args = unknown_args
 
     if args.command is None:
@@ -51,8 +51,8 @@ def cli_mapper(args):
     return func(**pass_args)
 
 
-def main():
-    args = parse_args()
+def main(argv):
+    args = parse_args(argv)
     if args.command:
         cli_mapper(args)
     else:
@@ -65,7 +65,7 @@ class Fail(Exception):
 
 def entrypoint():
     try:
-        main()
+        main(sys.argv[1:])
     except Fail as f:
         print(*f.args, file=sys.stderr)
         sys.exit(1)
