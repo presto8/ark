@@ -16,8 +16,9 @@ def test_simple_files(tmp_path):
     # children must be sorted alphabetically by name
     assert parent.children[0].path.name == "hello.txt"
     assert parent.children[1].path.name == "world.txt"
-    # ctime_ns of parent is max(ctime_ns) of children
-    assert parent.ctime_ns == (tmp_path / "world.txt").stat().st_ctime_ns
+
+    newest_child = max([x.path.stat().st_ctime_ns for x in parent.children])
+    assert parent.ctime_ns == newest_child
 
 
 def test_symlink(tmp_path):
