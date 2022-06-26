@@ -1,12 +1,13 @@
+import attr
 import msgpack
 import os
 import platform
-from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 from . import crypto
 
 
-@dataclass
+@attr.define
 class FsEntry:  # pragma: no cover
     """FsEntry captures a moment in time of a filesystem entry. The ctime and
     hash are computed once and then cached after that. If the underling
@@ -28,10 +29,9 @@ class FsEntry:  # pragma: no cover
         raise
 
 
-@dataclass
+@attr.define
 class FsChild(FsEntry):
-    def __post_init__(self):
-        self._b2 = None
+    _b2: bytes = b""
 
     @property
     def ctime_ns(self) -> int:
@@ -40,7 +40,7 @@ class FsChild(FsEntry):
 
     @property
     def b2(self):
-        if self._b2 is None:
+        if not self._b2:
             self._update()
         return self._b2
 
@@ -60,11 +60,11 @@ class FsChild(FsEntry):
         return crypto.blake2b(msgpack.packb([self.path.name, self.ctime_ns, self.b2]))
 
 
-@dataclass
+@attr.define
 class FsParent(FsEntry):
     hostname: str
     fsid: str
-    children: list[FsEntry] = field(default_factory=list)
+    children: list[FsEntry] = attr.field(factory=list)
     loaded: bool = False
 
     @property
