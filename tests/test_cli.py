@@ -1,7 +1,9 @@
 import contextlib
 import io
 from os.path import abspath
+import os
 import sys
+import time
 from src import cli
 from types import SimpleNamespace
 from helpers import create_test_files
@@ -42,6 +44,22 @@ def test_backup(tmp_path):
     create_test_files(tmp_path, {"hello": "hola\n", "world": "mundo\n"})
     result = run_cli(["backup", abspath(tmp_path)])
     assert 'added' in result.stdout
+
+    result = run_cli(["backup", abspath(tmp_path)])
+    assert 'have' in result.stdout
+
+    hello = tmp_path / "hello"
+    with open(hello, "wt") as f:
+        f.write('blahblah')
+
+    result = run_cli(["backup", abspath(tmp_path)])
+    assert 'changed' in result.stdout
+
+    # need a sleep here otherwise the test runs too quickly for the ctime to change
+    time.sleep(0.01)
+    hello.touch()
+    result = run_cli(["backup", abspath(tmp_path)])
+    assert 'ctime' in result.stdout
 
 
 # def test_not_a_directory():

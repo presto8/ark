@@ -60,7 +60,7 @@ class Fail(Exception):
     pass
 
 
-def entrypoint():
+def entrypoint():  # pragma: no cover
     try:
         main(sys.argv[1:])
     except Fail as f:
