@@ -168,3 +168,9 @@ def test_stop_recursion(tmp_path):
     file_children = [x for x in parent.children if isinstance(x, fs.FsFile)]
     assert len(file_children) == 1
     assert parent.children[1].loaded is False
+
+
+def test_empty_dir(tmp_path):
+    parent = fs.get_parent(tmp_path)
+    subdir_child_b2s = crypto.blake2b(msgpack.packb([]))
+    assert parent.selector == [abspath(parent.path), 0, subdir_child_b2s]

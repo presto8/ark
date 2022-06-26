@@ -44,7 +44,7 @@ def cli_mapper(args):
     func_args = sig.parameters.keys()
     missing_args = [arg for arg in func_args if arg not in arg]
     if missing_args:
-        raise Fail(f"missing arguments for {func}: {missing_args}")
+        raise Fail(f"missing arguments for {func}: {missing_args}")  # pragma: no cover
     pass_args = {k: v for k, v in args.__dict__.items() if k in func_args}
     if 'pathspec' in pass_args.keys():
         pass_args['pathspec'] = [Path(path) for path in pass_args['pathspec']]

@@ -63,6 +63,8 @@ class FsParent(FsEntry):
 
     @property
     def ctime_ns(self) -> int:
+        if not self.children:
+            return 0
         return max([x.ctime_ns for x in self.children])
 
     def _update_b2(self):
