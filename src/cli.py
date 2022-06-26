@@ -33,7 +33,7 @@ def parse_args(argv):
 
     if args.command is None:
         parser.print_help()
-        raise SystemExit(0)
+        raise SystemExit(1)
 
     return args
 
@@ -53,10 +53,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
-    if args.command:
-        cli_mapper(args)
-    else:
-        print(args)
+    cli_mapper(args)
 
 
 class Fail(Exception):
