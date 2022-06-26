@@ -29,26 +29,23 @@ def test_match(tmp_path):
     result = s.put(t)
     parts = result.split("_")
 
-    m = s.match(t, 1)
+    m = s.match("blah")
     assert len(m) == 1
-    firstm = m[0]
-    matching, notmatching = m[0]
-    assert len(matching) == 1
-    assert matching == parts[0:1]
+    matching = m[0]
+    assert parts[0] in matching
 
-    m = s.match(t, 2)
+    m = s.match("blah", "foo")
     assert len(m) == 1
-    firstm = m[0]
-    matching, notmatching = firstm
-    assert len(matching) == 2
-    assert matching == parts[0:2]
+    matching = m[0]
+    assert parts[0] in matching
+    assert parts[1] in matching
 
-    m = s.match(t, 3)
+    m = s.match("blah", "foo", "bar")
     assert len(m) == 1
-    firstm = m[0]
-    matching, notmatching = firstm
-    assert len(matching) == 3
-    assert matching == parts
+    matching = m[0]
+    assert parts[0] in matching
+    assert parts[1] in matching
+    assert parts[2] in matching
 
 
 def test_base64():

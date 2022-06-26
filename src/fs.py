@@ -18,7 +18,11 @@ class FsEntry:
 
     @property
     def selector(self):
-        return [os.path.abspath(self.path), self.ctime_ns, self.b2]
+        return [self.abspath, self.ctime_ns, self.b2]
+
+    @property
+    def abspath(self):
+        return os.path.abspath(self.path)
 
     @property
     def b2(self):

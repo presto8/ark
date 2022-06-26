@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from src import crypto
+from types import SimpleNamespace
 
 
 def b64e(data):
@@ -40,14 +41,13 @@ class Store:
         name = "_".join(self.wrap_selector(obj.selector))
         return (self.path / name).exists()
 
-    def match(self, obj, num_to_match=None):
-        n = num_to_match or len(obj.selector)
-        want = self.wrap_selector(obj.selector)
+    def match(self, *want_selector):
+        want = self.wrap_selector(want_selector)
         matches = []
         for entry in os.scandir(self.path):
             have = entry.name.split("_")
-            if have[:n] == want[:n]:
-                matches.append((have[:n], have[n:]))
+            if all([x in have for x in want]):
+                matches.append(have)
         return matches
 
     @staticmethod
