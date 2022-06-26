@@ -29,7 +29,7 @@ class Store:
     path: Path
 
     def __post_init__(self):
-        os.makedirs(self.path)
+        os.makedirs(self.path, exist_ok=True)
 
     def put(self, obj) -> str:
         "Returns name of path on store"
