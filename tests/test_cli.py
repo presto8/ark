@@ -29,3 +29,13 @@ def run_cli(args):
 def test_help():
     result = run_cli("--help".split())
     assert "Ark by Preston Hunt" in result.stdout
+
+
+def test_no_args():
+    result = run_cli("".split())
+    assert "Ark by Preston Hunt" in result.stdout
+
+
+# def test_not_a_directory():
+#     result = run_cli("backup /dev/null".split())
+#     assert "arguments are required" in result.stderr

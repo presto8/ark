@@ -143,6 +143,6 @@ def test_stop_recursion(tmp_path):
 
     parent = fs.get_parent(tmp_path, max_depth=0)
     assert len(parent.children) == 2
-    file_children = [x for x in parent.children if isinstance(x, fs.FsChild)]
+    file_children = [x for x in parent.children if isinstance(x, fs.FsFile)]
     assert len(file_children) == 1
     assert parent.children[1].loaded is False
