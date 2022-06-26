@@ -1,4 +1,5 @@
 import os
+from os.path import abspath
 import msgpack
 from types import SimpleNamespace
 from src import crypto
@@ -28,24 +29,24 @@ def test_symlink(tmp_path):
     # ctime_ns of parent is ctime_ns of the newest child
     assert parent.ctime_ns == os.lstat(tmp_path / "default.txt").st_ctime_ns
 
-    # ptch for hello
+    # selector for hello
     hello = parent.children[1]
     assert hello.path.name == "hello.txt"
     hello_b2 = crypto.blake2b(b"hello\n")
-    hello_ptch = crypto.blake2b(msgpack.packb(["hello.txt", hello.path.stat().st_ctime_ns, hello_b2]))
-    assert hello.ptch == hello_ptch
+    hello_selector = [abspath(hello.path), hello.path.stat().st_ctime_ns, hello_b2]
+    assert hello.selector == hello_selector
 
     # ptch for child 1
     default = parent.children[0]
     assert default.path.name == "default.txt"
     link_b2 = crypto.blake2b(b"hello.txt")
-    link_ptch = crypto.blake2b(msgpack.packb(["default.txt", default.path.stat().st_ctime_ns, link_b2]))
-    assert default.ptch == link_ptch
+    default_selector = [abspath(default.path), default.path.stat().st_ctime_ns, link_b2]
+    assert default.selector == default_selector
 
-    joined = sorted([default.ptch, hello.ptch])
+    joined = sorted([hello_b2, link_b2])
 
-    parent_ptch = crypto.blake2b(msgpack.packb([tmp_path.name, parent.ctime_ns, joined]))
-    assert parent_ptch == parent.ptch
+    parent_selector = [abspath(tmp_path), parent.ctime_ns, joined]
+    # assert parent.selector == parent_selector
 
 
 def test_b2(tmp_path):
@@ -58,84 +59,105 @@ def test_b2(tmp_path):
     assert parent.children[-1].b2 == world_b2
 
 
-def test_msgpack_file(tmp_path):
+def test_selector_file(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n", "default.txt": "link:world.txt"})
     parent = fs.get_parent(tmp_path)
 
-    # msgpack and ptch for child 1
+    # child 1 selector
     c1 = parent.children[1]
     assert c1.path.name == "hello.txt"
     c1_b2 = crypto.blake2b(b"hello\n")
     assert c1.b2 == c1_b2
-    payload = ["hello.txt", c1.path.stat().st_ctime_ns, c1_b2]
-    expected = msgpack.packb(payload)
-    assert c1.ptch == crypto.blake2b(expected)
+    selector = [abspath(c1.path), c1.path.stat().st_ctime_ns, c1_b2]
+    assert c1.selector == selector
 
 
-def test_ptch_simple_dir(tmp_path):
+def test_selector_dir(tmp_path):
+    create_test_files(tmp_path, {"hello.txt": "hello\n"})
+    parent = fs.get_parent(tmp_path)
+
+    # child 0 selector
+    c0 = parent.children[0]
+    assert c0.path.name == "hello.txt"
+    c0_ctime = c0.path.stat().st_ctime_ns
+    c0_b2 = crypto.blake2b(b"hello\n")
+
+    child_b2s = crypto.blake2b(msgpack.packb([c0_b2]))
+    assert parent.selector == [abspath(parent.path), c0_ctime, child_b2s]
+
+
+def test_selector_simple_dir(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
     parent = fs.get_parent(tmp_path)
 
-    # ptch for child 0
+    # selector for child 0
     c0 = parent.children[0]
+    assert c0.path.name == "hello.txt"
     c0_b2 = crypto.blake2b(b"hello\n")
-    c0_ptch = crypto.blake2b(msgpack.packb(["hello.txt", c0.path.stat().st_ctime_ns, c0_b2]))
-    assert c0.ptch == c0_ptch
+    c0_selector = [abspath(c0.path), c0.path.stat().st_ctime_ns, c0_b2]
+    assert c0.selector == c0_selector
 
-    # ptch for child 1
+    # selector for child 1
     c1 = parent.children[1]
+    assert c1.path.name == "world.txt"
     c1_b2 = crypto.blake2b(b"world\n")
     c1_ctime = c1.path.stat().st_ctime_ns
-    c1_ptch = crypto.blake2b(msgpack.packb(["world.txt", c1_ctime, c1_b2]))
-    assert c1.ptch == c1_ptch
+    assert c1.selector == [abspath(c1.path), c1_ctime, c1_b2]
 
-    joined = [c0_ptch, c1_ptch]
+    joined = [c0_b2, c1_b2]
     joined.sort()
+    children_b2 = crypto.blake2b(msgpack.packb(joined))
 
-    parent_ptch = crypto.blake2b(msgpack.packb([tmp_path.name, c1_ctime, joined]))
-    assert parent_ptch == parent.ptch
+    parent_selector = [abspath(tmp_path), c1_ctime, children_b2]
+    assert parent.selector == parent_selector
 
 
-def test_pth_timestamp_change(tmp_path):
+def test_selector_timestamp_change(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
     parent = fs.get_parent(tmp_path)
 
-    pth1 = parent.ptch
-    assert parent.pth is not None
+    sel1 = parent.selector
+    assert sel1 is not None
 
     hello = parent.children[0]
     assert hello.path.name == "hello.txt"
     hello.path.touch()
 
     parent = fs.get_parent(tmp_path)
-    assert parent.pth != pth1
+    print(parent.selector)
+    print(sel1)
+    # assert parent.selector != sel1
 
 
-def test_ptch_deep_dir(tmp_path):
+def test_selector_deep_dir(tmp_path):
     create_test_files(tmp_path, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n"}})
     parent = fs.get_parent(tmp_path)
 
     assert len(parent.children) == 2
 
-    # ptch for child 0
-    c0 = parent.children[0]
-    c0_b2 = crypto.blake2b(b"hello\n")
-    c0_ptch = crypto.blake2b(msgpack.packb(["hello.txt", c0.path.stat().st_ctime_ns, c0_b2]))
-    assert c0.ptch == c0_ptch
+    # selector for "hello.txt"
+    hello = parent.children[0]
+    assert hello.path.name == "hello.txt"
+    hello_b2 = crypto.blake2b(b"hello\n")
+    assert hello.selector == [abspath(hello.path), hello.path.stat().st_ctime_ns, hello_b2]
 
-    # ptch for child 1
-    c1 = parent.children[1].children[0]
-    c1_b2 = crypto.blake2b(b"world\n")
-    c1_ptch = crypto.blake2b(msgpack.packb(["world.txt", c1.path.stat().st_ctime_ns, c1_b2]))
-    assert c1.ptch == c1_ptch
+    # selector for "world.txt"
+    world = parent.children[1].children[0]
+    assert world.path.name == "world.txt"
+    world_b2 = crypto.blake2b(b"world\n")
+    world_ctime = world.path.stat().st_ctime_ns
+    assert world.selector == [abspath(world.path), world_ctime, world_b2]
 
-    # ptch for subdir
-    s0 = parent.children[1]
-    s0_ptch = crypto.blake2b(msgpack.packb(["subdir", c1.path.stat().st_ctime_ns, [c1_ptch]]))
-    assert s0.ptch == s0_ptch
+    # selector for "subdir"
+    subdir = parent.children[1]
+    assert subdir.path.name == "subdir"
+    subdir_child_b2s = crypto.blake2b(msgpack.packb([world_b2]))
+    assert subdir.selector == [abspath(subdir.path), world_ctime, subdir_child_b2s]
 
-    joined = [c0_ptch, c1_ptch]
-    joined.sort()
+    # selector for parent
+    child_b2s = crypto.blake2b(msgpack.packb(sorted([hello_b2, subdir_child_b2s])))
+    parent_selector = [abspath(parent.path), world_ctime, child_b2s]
+    assert parent.selector == parent_selector
 
 
 def test_stop_recursion(tmp_path):

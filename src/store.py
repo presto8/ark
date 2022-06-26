@@ -23,8 +23,9 @@ class Store:
     def __post_init__(self):
         os.makedirs(self.path, exist_ok=True)
 
-    def put(self, selector, data: bytes = b"") -> str:
-        name = "_".join(self.wrap_selector(selector))
+    def put(self, obj, data: bytes = b"") -> str:
+        "Put an object that implements the selector method."
+        name = "_".join(self.wrap_selector(obj.selector))
         return self.putb(name, data)
 
     def getb(self, name: str) -> bytes:
@@ -35,13 +36,13 @@ class Store:
             f.write(data)
         return name
 
-    def have(self, selector) -> bool:
-        name = "_".join(self.wrap_selector(selector))
+    def have(self, obj) -> bool:
+        name = "_".join(self.wrap_selector(obj.selector))
         return (self.path / name).exists()
 
-    def match(self, selector, num_to_match=None):
-        n = num_to_match or len(selector)
-        want = self.wrap_selector(selector)
+    def match(self, obj, num_to_match=None):
+        n = num_to_match or len(obj.selector)
+        want = self.wrap_selector(obj.selector)
         matches = []
         for entry in os.scandir(self.path):
             have = entry.name.split("_")
