@@ -9,25 +9,25 @@ from helpers import create_test_files
 
 def test_simple_files(tmp_path):
     # directory containing only files (depth=0)
-    create_test_files(tmp_path, {"world.txt": "world\n", "hello.txt": "hello\n"})
+    files = create_test_files(tmp_path, {"world.txt": "world\n", "hello.txt": "hello\n"})
     parent = fs.get_parent(tmp_path)
 
-    assert len(parent.children) == 2
+    assert len(parent.children) == files.num_files
     # children must be sorted alphabetically by name
     assert parent.children[0].path.name == "hello.txt"
     assert parent.children[1].path.name == "world.txt"
     # ctime_ns of parent is ctime of the newest file
-    assert parent.ctime_ns == (tmp_path / "hello.txt").stat().st_ctime_ns
+    assert parent.ctime_ns == files.newest_file_ctime_ns
 
 
 def test_symlink(tmp_path):
     # add a symlink
-    create_test_files(tmp_path, {"hello.txt": "hello\n", "default.txt": "link:hello.txt"})
+    files = create_test_files(tmp_path, {"hello.txt": "hello\n", "default.txt": "link:hello.txt"})
     parent = fs.get_parent(tmp_path)
 
-    assert len(parent.children) == 2
+    assert len(parent.children) == files.num_files
     # ctime_ns of parent is ctime_ns of the newest child
-    assert parent.ctime_ns == os.lstat(tmp_path / "default.txt").st_ctime_ns
+    assert parent.ctime_ns == files.newest_file_ctime_ns
 
     # selector for hello
     hello = parent.children[1]
@@ -36,7 +36,7 @@ def test_symlink(tmp_path):
     hello_selector = [abspath(hello.path), hello.path.stat().st_ctime_ns, hello_b2]
     assert hello.selector == hello_selector
 
-    # ptch for child 1
+    # selector for child 1
     default = parent.children[0]
     assert default.path.name == "default.txt"
     link_b2 = crypto.blake2b(b"hello.txt")
@@ -44,9 +44,10 @@ def test_symlink(tmp_path):
     assert default.selector == default_selector
 
     joined = sorted([hello_b2, link_b2])
+    child_b2s = crypto.blake2b(msgpack.packb(joined))
 
-    parent_selector = [abspath(tmp_path), parent.ctime_ns, joined]
-    # assert parent.selector == parent_selector
+    parent_selector = [abspath(tmp_path), files.newest_file_ctime_ns, child_b2s]
+    assert parent.selector == parent_selector
 
 
 def test_b2(tmp_path):
@@ -60,7 +61,7 @@ def test_b2(tmp_path):
 
 
 def test_selector_file(tmp_path):
-    create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n", "default.txt": "link:world.txt"})
+    files = create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n", "default.txt": "link:world.txt"})
     parent = fs.get_parent(tmp_path)
 
     # child 1 selector
@@ -68,7 +69,7 @@ def test_selector_file(tmp_path):
     assert c1.path.name == "hello.txt"
     c1_b2 = crypto.blake2b(b"hello\n")
     assert c1.b2 == c1_b2
-    selector = [abspath(c1.path), c1.path.stat().st_ctime_ns, c1_b2]
+    selector = [abspath(c1.path), files.newest_file_ctime_ns, c1_b2]
     assert c1.selector == selector
 
 
@@ -87,7 +88,7 @@ def test_selector_dir(tmp_path):
 
 
 def test_selector_simple_dir(tmp_path):
-    create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
+    files = create_test_files(tmp_path, {"hello.txt": "hello\n", "world.txt": "world\n"})
     parent = fs.get_parent(tmp_path)
 
     # selector for child 0
@@ -108,7 +109,7 @@ def test_selector_simple_dir(tmp_path):
     joined.sort()
     children_b2 = crypto.blake2b(msgpack.packb(joined))
 
-    parent_selector = [abspath(tmp_path), c1_ctime, children_b2]
+    parent_selector = [abspath(tmp_path), files.newest_file_ctime_ns, children_b2]
     assert parent.selector == parent_selector
 
 
@@ -130,10 +131,10 @@ def test_selector_timestamp_change(tmp_path):
 
 
 def test_selector_deep_dir(tmp_path):
-    create_test_files(tmp_path, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n"}})
+    files = create_test_files(tmp_path, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n"}})
     parent = fs.get_parent(tmp_path)
 
-    assert len(parent.children) == 2
+    assert len(parent.children) == files.num_files
 
     # selector for "hello.txt"
     hello = parent.children[0]
@@ -156,7 +157,7 @@ def test_selector_deep_dir(tmp_path):
 
     # selector for parent
     child_b2s = crypto.blake2b(msgpack.packb(sorted([hello_b2, subdir_child_b2s])))
-    parent_selector = [abspath(parent.path), world_ctime, child_b2s]
+    parent_selector = [abspath(parent.path), files.newest_file_ctime_ns, child_b2s]
     assert parent.selector == parent_selector
 
 
