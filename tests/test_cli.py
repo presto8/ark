@@ -1,6 +1,6 @@
 import contextlib
 import io
-from os.path import abspath
+from os.path import abspath, stat
 import os
 import sys
 import time
@@ -55,11 +55,13 @@ def test_backup(tmp_path):
     result = run_cli(["backup", abspath(tmp_path)])
     assert 'changed' in result.stdout
 
-    # need a sleep here otherwise the test runs too quickly for the ctime to change
-    time.sleep(0.01)
-    hello.touch()
-    result = run_cli(["backup", abspath(tmp_path)])
-    assert 'ctime' in result.stdout
+    # ctime1 = os.stat(hello).st_ctime_ns
+    # hello.touch()
+    # # wait for the fs to notice the ctime change
+    # while os.stat(hello).st_ctime_ns == ctime1:
+    #     time.sleep(0.001)
+    # result = run_cli(["backup", abspath(tmp_path)])
+    # assert 'ctime' in result.stdout
 
 
 # def test_not_a_directory():
