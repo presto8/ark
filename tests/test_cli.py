@@ -1,8 +1,10 @@
 import contextlib
 import io
+from os.path import abspath
 import sys
 from src import cli
 from types import SimpleNamespace
+from helpers import create_test_files
 
 
 @contextlib.contextmanager
@@ -34,6 +36,12 @@ def test_help():
 def test_no_args():
     result = run_cli("".split())
     assert "Ark by Preston Hunt" in result.stdout
+
+
+def test_backup(tmp_path):
+    create_test_files(tmp_path, {"hello": "hola\n", "world": "mundo\n"})
+    result = run_cli(["backup", abspath(tmp_path)])
+    assert 'added' in result.stdout
 
 
 # def test_not_a_directory():
