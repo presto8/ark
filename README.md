@@ -1,5 +1,7 @@
 # Ark
 
+<img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/wiki/presto8/ark/python-coverage-comment-action-badge.json">
+
 <img src="assets/ark.svg" alt="Noah's Ark" align="right" style="width: 200px;" />
 
 _Make yourself an ark of cypress wood; make rooms in it and coat it with
