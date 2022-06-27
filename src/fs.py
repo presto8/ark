@@ -44,7 +44,7 @@ class FsFile(FsEntry):
     @property
     def ctime_ns(self) -> int:
         # pathlib caches this after this first call
-        return self.path.stat().st_ctime_ns
+        return self.path.stat(follow_symlinks=False).st_ctime_ns
 
     def _update_b2(self):
         if self.path.is_symlink():

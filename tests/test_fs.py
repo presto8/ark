@@ -175,3 +175,14 @@ def test_empty_dir(tmp_path):
     parent = fs.get_parent(tmp_path)
     subdir_child_b2s = crypto.blake2b(msgpack.packb([]))
     assert parent.selector == [abspath(parent.path), 0, subdir_child_b2s]
+
+
+def test_broken_link(tmp_path):
+    create_test_files(tmp_path, {"hello.txt": "hello\n", "default.txt": "link:hello.txt"})
+    hello = tmp_path / "hello.txt"
+    hello.unlink()
+
+    parent = fs.get_parent(tmp_path)
+    # selector for child 0
+    default = parent.children[0]
+    assert default.selector
