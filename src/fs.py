@@ -55,7 +55,7 @@ class FsFile(FsEntry):
 
 
 @attr.define
-class FsParent(FsEntry):
+class FsDir(FsEntry):
     # hostname: str
     # fsid: str
     children: list[FsEntry] = attr.field(factory=list)
@@ -72,13 +72,13 @@ class FsParent(FsEntry):
         self._b2 = crypto.blake2b(child_b2s)
 
 
-def get_parent(path, max_depth=-1) -> FsParent:
+def get_parent(path, max_depth=-1) -> FsDir:
     children = []
     next_child: FsEntry
     for entry in os.scandir(path):
         if entry.is_dir(follow_symlinks=False):
             if max_depth == 0:  # stop recursion
-                next_child = FsParent(path=Path(entry))
+                next_child = FsDir(path=Path(entry))
             else:
                 next_child = get_parent(entry, max_depth=max_depth - 1)
         else:
@@ -86,4 +86,4 @@ def get_parent(path, max_depth=-1) -> FsParent:
         children.append(next_child)
 
     children.sort(key=lambda x: x.path.name)
-    return FsParent(path=Path(path), children=children, loaded=True)
+    return FsDir(path=Path(path), children=children, loaded=True)
