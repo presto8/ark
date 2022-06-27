@@ -1,9 +1,19 @@
+import os
 from pathlib import Path
+from typing import Generator
 from . import fs
 from . import store
 
 
 S = store.Store(Path("/tmp/store"))
+
+
+def scantree_depth_first(path) -> Generator[tuple[str, list[os.DirEntry]], None, None]:
+    entries = list(os.scandir(path))
+    for entry in entries:
+        if entry.is_dir():
+            yield from scantree_depth_first(entry.path)
+    yield path, entries
 
 
 def backup(pathspec: list[Path]) -> None:
