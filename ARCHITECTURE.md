@@ -1,3 +1,22 @@
+# Linux Filesystem Theory
+
+Each filesystem entry has a stat object that contains a ctime (changed time).
+Whenever a filesystem entry's contents change, Linux updates the ctime. For a
+file, this means that any change to the file's contents will update the ctime.
+For directories, only adding or removing a file from the directory will update
+the directory's ctime. Changing the contents of an existing file will update
+that file's ctime but not the directory's ctime.
+
+In order to backup efficiently, Ark updates the ctime of any directory to the
+newest ctime of any file in the directory with a newer ctime. This allows Ark
+to use the ctime of the directory to know if the ctime of any object in the
+directory has changed.
+
+
+
+
+# Raw notes
+
 remote filename - ark object
 
 H() = CHF(PK || ...)
