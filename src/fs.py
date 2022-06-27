@@ -3,7 +3,7 @@ import msgpack
 import os
 import platform
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Generator
 from . import crypto
 
 
@@ -38,6 +38,11 @@ class FsEntry:
     def _update_b2(self) -> bytes:  # pragma: no cover
         raise
 
+    @staticmethod
+    def new(entry: os.DirEntry):
+        factory = FsDir if entry.is_dir(follow_symlinks=False) else FsFile
+        return factory(path=Path(entry))
+
 
 @attr.define
 class FsFile(FsEntry):
@@ -70,6 +75,38 @@ class FsDir(FsEntry):
     def _update_b2(self):
         child_b2s = msgpack.packb(sorted([x.b2 for x in self.children]))
         self._b2 = crypto.blake2b(child_b2s)
+
+
+@attr.define
+class ScanResult:
+    abspath: str
+    entries: list[os.DirEntry]
+
+    @property
+    def FsDir(self) -> FsDir:
+        children = [FsEntry.new(x) for x in self.entries]
+        return FsDir(path=Path(self.abspath), children=children, loaded=True)
+
+
+def scan_worker(path, depth_first=True) -> Generator[ScanResult, None, None]:
+    result = ScanResult(abspath=os.path.abspath(path), entries=list(os.scandir(path)))
+    if not depth_first:
+        yield result
+    for entry in result.entries:
+        if entry.is_dir():
+            yield from scan_worker(entry.path, depth_first=depth_first)
+    if depth_first:
+        yield result
+
+
+def scandepth(path) -> Generator[ScanResult, None, None]:
+    "Depth-first recursive scan of `path`."
+    yield from scan_worker(path, depth_first=True)
+
+
+def scanbreadth(path) -> Generator[ScanResult, None, None]:
+    "Breadth-first recursive scan of `path`."
+    yield from scan_worker(path, depth_first=False)
 
 
 def get_parent(path, max_depth=-1) -> FsDir:
