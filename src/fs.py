@@ -3,7 +3,7 @@ import msgpack
 import os
 import platform
 from pathlib import Path
-from typing import Optional, Generator
+from typing import Generator
 from . import crypto
 
 
