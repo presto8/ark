@@ -13,6 +13,24 @@ to use the ctime of the directory to know if the ctime of any object in the
 directory has changed.
 
 
+# Software layout
+
+Ark is comprised of the following components:
+
+- cli module: Parses command line arguments and provides command-line user
+  interface
+
+- ark module: Main module that implements the backup. Metaphor: The ark is
+  where your files are stored safely.
+
+    - noah: A class that maintains the necesary state for the ark module to
+      work. Metaphor: Noah is the person who load the ark for you and does all
+      the work of maintaining it.
+
+- fs module: interface to local filesystem entries (files and directories)
+
+- store module: Provides storage for objects. Metaphor: The storerooms of the
+  ark are where everything is stored.
 
 
 # Raw notes
@@ -170,3 +188,4 @@ For example, consider the following directory structure:
 
 TODO:
     HR(special_file) = CHF(???)
+
