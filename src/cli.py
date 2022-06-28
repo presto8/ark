@@ -2,6 +2,7 @@
 
 import argparse
 import inspect
+import os
 import sys
 from pathlib import Path
 from . import ark
@@ -18,6 +19,7 @@ currently available backup programs.
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--arkdir', default=os.environ.get('ARK_DIR'), help='location of ark config files')
     parser.add_argument('--verbose', default=False, action='store_true', help='show more detailed messages')
     parser.add_argument('--debug', action='store_true')
 
@@ -53,6 +55,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
+    args.noah = ark.Noah(arkdir=args.arkdir)
     cli_mapper(args)
 
 

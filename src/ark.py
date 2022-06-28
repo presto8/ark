@@ -1,37 +1,44 @@
 import os
 from pathlib import Path
-from typing import Generator
 from . import fs
 from . import store
 
 
-S = store.Store(Path("/tmp/store"))
+class Noah:
+    def __init__(self, arkdir):
+        self.arkdir = self.resolve_arkdir(arkdir)
+        self.store = store.Store(self.arkdir / "store")
 
-
-def scantree_depth_first(path) -> Generator[tuple[str, list[os.DirEntry]], None, None]:
-    entries = list(os.scandir(path))
-    for entry in entries:
-        if entry.is_dir():
-            yield from scantree_depth_first(entry.path)
-    yield path, entries
-
-
-def backup(pathspec: list[Path]) -> None:
-    for path in pathspec:
-        parent = fs.get_parent(path)
-
-        if S.have(parent):
-            reason = "have"
+    def resolve_arkdir(self, arkdir):
+        if arkdir:
+            path = arkdir
+        elif 'XDG_CONFIG_HOME' in os.environ:
+            path = os.path.join(os.environ['XDG_CONFIG_HOME'], 'ark')
         else:
-            if S.match(parent.abspath, parent.b2):
-                reason = "ctime"
-            elif S.match(parent.abspath):
-                reason = "changed"
+            path = os.path.join(os.environ['HOME'], '.config', 'ark')
+        return Path(path)
+
+
+def backup(noah, pathspec: list[Path]) -> None:
+    for path in pathspec:
+        scanresults = {x.abspath: x for x in fs.scandepth(path)}
+
+        for abspath, result in scanresults.items():
+            fsdir = result.FsDir
+
+            if noah.store.match(*fsdir.time_selector):
+                reason = 'have'
             else:
-                reason = "added"
-            S.put(parent)
+                if noah.store.match(fsdir.abspath, fsdir.b2):
+                    reason = "ctime"
+                elif noah.store.match(fsdir.abspath):
+                    reason = "changed"
+                else:
+                    reason = "added"
+                print(fsdir)
+                noah.store.put(fsdir)
+            print(f"{reason:<10} {result.abspath}")
 
-        print(f"{path}: {reason}")
 
-        for m in S.match(parent.abspath):
-            print(m)
+    # TODO: binary search based on ctime if performance needed
+
