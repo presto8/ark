@@ -30,6 +30,12 @@ def parse_args(argv):
     x.add_argument('pathspec', nargs='+', default=('.',), help="paths to process")
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
 
+    # 'ark init'
+    x = subparsers.add_parser('init', help='initialize an ark')
+
+    # 'ark info'
+    x = subparsers.add_parser('info', help='show information and statistics for this ark')
+
     args, unknown_args = parser.parse_known_args(argv)
     args.unknown_args = unknown_args
 

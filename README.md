@@ -39,6 +39,7 @@ Tentative list of major commands:
 * ark find | ark grep
 * ark remote
 * ark status
+* ark info
 
 ## Tech Stack
 * Python (pytest, coverage)

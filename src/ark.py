@@ -42,3 +42,10 @@ def backup(noah, pathspec: list[Path]) -> None:
 
     # TODO: binary search based on ctime if performance needed
 
+
+def init(noah):
+    print("TODO: init")
+
+
+def info(noah):
+    print("TODO: info")
