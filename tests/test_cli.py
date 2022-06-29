@@ -2,7 +2,6 @@ import contextlib
 import io
 from os.path import abspath
 import functools
-import os
 import sys
 import time
 from src import cli

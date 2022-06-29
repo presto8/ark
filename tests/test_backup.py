@@ -1,4 +1,3 @@
-import os
 from src import fs
 from src.store import Store
 from helpers import create_test_files
