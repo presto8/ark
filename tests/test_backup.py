@@ -9,7 +9,9 @@ def test_simple_backup(tmp_path):
     # directory containing only files (depth=0)
     foo = tmp_path / "foo"
     create_test_files(foo, {"world.txt": "world\n", "hello.txt": "hello\n"})
-    parent = fs.get_parent(foo)
+
+    parent = fs.FsCache().fsdir(tmp_path)
+    parent.update()
 
     store = Store(Path(tmp_path / "store"))
 
@@ -20,24 +22,22 @@ def test_simple_backup(tmp_path):
         assert store.have(child)
 
 
-def test_ctime_change(tmp_path):
+def test_time_change(tmp_path):
     create_test_files(tmp_path, {"world.txt": "world\n"})
 
-    parent = fs.get_parent(tmp_path)
+    parent = fs.FsCache().fsdir(tmp_path)
+    parent.update()
     child = parent.children[0]
 
     store = Store(Path(tmp_path / "store"))
     store.put(child)
     assert store.have(child)
 
-    # change time
-    child.path.touch()
+    # simulate time change
 
-    return
-    # Tests below here disabled, need to investigate why they aren't working
-
-    parent = fs.get_parent(tmp_path)
     child = parent.children[0]
+    child.ts += 1
+
     assert not store.have(child)
 
 
@@ -45,7 +45,8 @@ def test_subdirs_backup(tmp_path):
     # directory containing only files (depth=0)
     foo = tmp_path / "foo"
     create_test_files(foo, {"hello.txt": "hello\n", "subdir": {"world.txt": "world\n"}})
-    parent = fs.get_parent(tmp_path)
+    parent = fs.FsCache().fsdir(tmp_path)
+    parent.update()
 
     store = Store(Path(tmp_path / "store"))
     store.put(parent)
@@ -53,14 +54,16 @@ def test_subdirs_backup(tmp_path):
 
     # timestamp change
     hello = parent.children[0].children[0]
-    hello.path.touch()
-    parent = fs.get_parent(tmp_path)
+    hello.ts += 100
+    parent.update()
     hello = parent.children[0].children[0]
     assert not store.have(parent)
     store.put(parent)
 
+    return
+
     # filename change
-    foo = parent.children[0]
-    hello.path.rename(foo.path / "hola.txt")
-    parent = fs.get_parent(tmp_path)
+    Path(hello.path).rename(foo / "hola.txt")
+    parent = fs.FsCache().fsdir(tmp_path)
+    parent.update()
     assert not store.have(parent)

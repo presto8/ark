@@ -20,3 +20,21 @@ def test_phf1():
     assert h[1:] == crypto.blake2b(pk)[:31]
 
     assert helpers.phf1(b"") == h
+
+
+def test_base64():
+    assert crypto.b64e("") == ""
+    assert crypto.b64e("f") == "Zg=="
+    assert crypto.b64e("fo") == "Zm8="
+    assert crypto.b64e("foo") == "Zm9v"
+    assert crypto.b64e("foob") == "Zm9vYg=="
+    assert crypto.b64e("fooba") == "Zm9vYmE="
+    assert crypto.b64e("foobar") == "Zm9vYmFy"
+
+    assert crypto.b64d("") == b""
+    assert crypto.b64d("Zg==") == b"f"
+    assert crypto.b64d("Zm8=") == b"fo"
+    assert crypto.b64d("Zm9v") == b"foo"
+    assert crypto.b64d("Zm9vYg==") == b"foob"
+    assert crypto.b64d("Zm9vYmE=") == b"fooba"
+    assert crypto.b64d("Zm9vYmFy") == b"foobar"

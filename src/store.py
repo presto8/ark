@@ -1,59 +1,51 @@
-import base64
 import msgpack
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from src import crypto
 from types import SimpleNamespace
-
-
-def b64e(data):
-    if isinstance(data, str):
-        data = data.encode()
-    return base64.b64encode(data, altchars=b"+-").decode()
-
-
-def b64d(data):
-    return base64.b64decode(data, altchars=b"+-")
+from collections import Counter
 
 
 @dataclass
 class Store:
-    path: Path
+    path: os.PathLike
 
     def __post_init__(self):
         os.makedirs(self.path, exist_ok=True)
 
-    def put(self, obj, data: bytes = b"") -> str:
+    def put(self, obj) -> str:
         "Put an object that implements the selector method."
         name = "_".join(self.wrap_selector(obj.selector))
-        return self.putb(name, data)
+        return self.putb(name, obj.read())
 
     def getb(self, name: str) -> bytes:
-        return open(self.path / name, "rb").read()
+        return open(os.path.join(self.path, name), "rb").read()
 
     def putb(self, name: str, data: bytes):
-        with open(self.path / name, "wb") as f:
+        with open(os.path.join(self.path, name), "wb") as f:
             f.write(data)
         return name
 
     def have(self, obj) -> bool:
         name = "_".join(self.wrap_selector(obj.selector))
-        return (self.path / name).exists()
+        return os.path.exists(os.path.join(self.path, name))
 
-    def match(self, *want_selector):
-        want = self.wrap_selector(want_selector)
-        matches = []
+    def match(self, query_selector):
+        "Returns objects matching any selector."
+        want = self.wrap_selector(query_selector)
+        matches = Counter()
         for entry in os.scandir(self.path):
             have = entry.name.split("_")
-            if all([x in have for x in want]):
-                matches.append(have)
-        return matches
+            for w in want:
+                if w in have:
+                    matches[w] += 1
+        return [matches[w] for w in want]
 
     @staticmethod
     def wrap_selector(selector):
         encrypted = [crypto.blake2b(msgpack.packb(x))[:32] for x in selector]
-        return [b64e(x) for x in encrypted]
+        return [crypto.b64e(x) for x in encrypted]
 
     # guid: str
     # label: Optional[str] = None

@@ -1,9 +1,7 @@
 import attr
 import msgpack
 import os
-import platform
-from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 from . import crypto
 
 
@@ -11,170 +9,121 @@ def flatten(input_list: list[str]) -> str:
     return ' '.join([x if ' ' not in x else f'"{x}"' for x in input_list])
 
 
+def timestamp(path: os.PathLike) -> int:
+    return os.lstat(path).st_mtime_ns
+
+
 @attr.define
 class FsEntry:
-    """FsEntry captures a moment in time of a filesystem entry. The ctime and
-    hash are computed once and then cached after that. If the underling
-    filesystem changes, the cached values will be returned. To detect
-    filesystem changes, create a new FsEntry object."""
-    path: Path
-    _b2: bytes = b""
-
-    def __repr__(self):
-        ctime = int(self.ctime_ns / 1E9)
-        b2 = self._b2.hex()[:8] if self._b2 else "None"
-        cls = self.__class__.__name__
-        files = flatten([os.path.basename(x.abspath) for x in self.files])
-        subdirs = flatten([os.path.basename(x.abspath) for x in self.subdirs])
-        return f"{cls}({ctime} {b2} {self.abspath} files=[{files}] subdirs=[{subdirs}])"
-
-    @property
-    def selector(self):
-        return [self.abspath, self.ctime_ns, self.b2]
-
-    @property
-    def time_selector(self):
-        return [self.abspath, self.ctime_ns]
-
-    @property
-    def hash_selector(self):
-        return [self.abspath, self.ctime_ns, self.b2]
+    path: os.PathLike
+    ts: int
+    hash: Optional[bytes] = None  # lazy load
 
     @property
     def abspath(self):
         return os.path.abspath(self.path)
 
+    def read(self):
+        raise
+
     @property
-    def b2(self):
-        if not self._b2:
-            self._update_b2()
-        return self._b2
-
-    # abstract methods
-
-    def ctime_ns(self) -> int:  # pragma: no cover
-        raise
-
-    def _update_b2(self) -> bytes:  # pragma: no cover
-        raise
-
-    @staticmethod
-    def new(entry: os.DirEntry):
-        factory = FsDir if entry.is_dir(follow_symlinks=False) else FsFile
-        return factory(path=Path(entry))
+    def selector(self):
+        children = sorted([x.abspath for x in self.children]) if isinstance(self, FsDir) else None
+        result = [self.abspath, [self.abspath, self.ts, children]]
+        if self.hash:
+            result.append([self.abspath, self.hash])
+        return result
 
 
 @attr.define
 class FsFile(FsEntry):
     def __repr__(self):
-        return f"FsFile({self._b2.hex()[:8]} {self.abspath})"
+        h = self.hash.hex()[:8] if self.hash else "None"
+        return f"FsFile({os.path.basename(self.abspath)} {self.ts / 1E9} {h})"
 
-    @property
-    def ctime_ns(self) -> int:
-        return self.path.stat(follow_symlinks=False).st_ctime_ns
+    @staticmethod
+    def new(path: os.PathLike):
+        ts = timestamp(path)
+        return FsFile(path=path, ts=ts)
 
-    def _update_b2(self):
-        if self.path.is_symlink():
-            contents = str(self.path.readlink()).encode()
+    def update(self):
+        if os.path.islink(self.path):
+            contents = os.readlink(self.abspath).encode()
         else:
-            contents = open(self.path, "rb").read()
-        self._b2 = crypto.blake2b(contents)
+            contents = open(self.abspath, "rb").read()
+        self.hash = crypto.blake2b(contents)
+
+    def read(self):
+        return open(self.abspath, "rb").read()
 
 
 @attr.define
 class FsDir(FsEntry):
-    # hostname: str
-    # fsid: str
     files: list[FsFile] = attr.field(factory=list)
     subdirs: list["FsDir"] = attr.field(factory=list)
-    loaded: bool = False
 
     def __repr__(self):
-        return super().__repr__()
+        h = self.hash.hex()[:8] if self.hash else "None"
+        files = [x for x in self.files]
+        # subdirs = flatten([os.path.basename(x.abspath) for x in self.subdirs])
+        subdirs = [x for x in self.subdirs]
+        extras = f" files={files} subdirs=[{subdirs}]"
+        return f"FsDir({self.abspath} {self.ts / 1E9} {h}{extras})"
 
-    # @property
-    # def loaded(self) -> bool:
-    #     return self.ctime_ns != 0
+    @staticmethod
+    def new(path: os.PathLike, files: list[FsFile], subdirs: list["FsDir"]):
+        try:
+            ts = max([x.ts for x in files + subdirs])
+        except ValueError:
+            ts = timestamp(path)
+        return FsDir(path=path, ts=ts, files=files, subdirs=subdirs)
 
     @property
     def children(self):
         return sorted(self.files + self.subdirs, key=lambda x: x.abspath)
 
-    @property
-    def ctime_ns(self) -> int:
-        children_ctime_ns = [x.ctime_ns for x in self.children]
-        if not children_ctime_ns:
-            return 0
-        return max(children_ctime_ns)
-
-    def _update_b2(self):
+    def update(self):
         for x in self.children:
-            print(x, x.b2.hex()[:8])
-        if any([not x.b2 for x in self.children]):
+            x.update()
+        if any([x.hash is None for x in self.children]):
             raise
-        child_b2s = msgpack.packb(sorted([x.b2 for x in self.children]))
-        self._b2 = crypto.blake2b(child_b2s)
+        child_hashes = msgpack.packb(sorted([x.selector for x in self.children]))
+        self.hash = crypto.blake2b(child_hashes)
+
+    def read(self):
+        return str(self).encode()
 
 
 @attr.define
-class ScanResult:
-    abspath: str
-    ctime_ns: int
-    files: list[os.DirEntry]
-    subdirs: list[os.DirEntry]
+class FsCache:
+    fsdir_cache: dict[str, FsDir] = {}
 
-    def __repr__(self):
-        files = flatten([x.name for x in self.files])
-        subdirs = flatten([x.name for x in self.subdirs])
-        ctime = int(self.ctime_ns / 1E9)
-        return f'ScanResult("{self.abspath}" {ctime} files=[{files}] subdirs=[{subdirs}])'
+    def scanpath(self, *paths) -> Generator[FsDir, None, None]:
+        "Scan entire path, store results in cache, and yield depth first to caller."
+        for path in paths:
+            for entry in scandepth(path):
+                self.fsdir_cache[entry.abspath] = entry
+                yield entry
 
-    @property
-    def FsDir(self) -> FsDir:
-        files = [FsEntry.new(x) for x in self.files]
-        subdirs = [FsEntry.new(x) for x in self.subdirs]
-        return FsDir(path=Path(self.abspath), files=files, subdirs=subdirs, loaded=True)
-
-
-def scan_worker(path, depth_first=True) -> Generator[ScanResult, None, None]:
-    ctime_ns = os.lstat(path).st_ctime_ns
-    files, subdirs = [], []
-    for entry in os.scandir(path):
-        subdirs.append(entry) if entry.is_dir(follow_symlinks=False) else files.append(entry)
-    result = ScanResult(abspath=os.path.abspath(path), ctime_ns=ctime_ns, files=files, subdirs=subdirs)
-    if not depth_first:
-        yield result
-    for entry in result.subdirs:
-        for subdir in scan_worker(entry.path, depth_first=depth_first):
-            yield subdir
-            result.ctime_ns = max(result.ctime_ns, subdir.ctime_ns)
-    if depth_first:
-        print('yielding', result)
-        yield result
+    def fsdir(self, path: os.PathLike) -> FsDir:
+        """Return ScanEntry for abspath from the cache, retrieving it from disk
+        if necessary."""
+        abspath = os.path.abspath(path)
+        if abspath not in self.fsdir_cache:
+            list(self.scanpath(path))  # update cache
+        return self.fsdir_cache[abspath]
 
 
-def scandepth(path) -> Generator[ScanResult, None, None]:
+def scandepth(path: os.PathLike) -> Generator[FsDir, None, None]:
     "Depth-first recursive scan of `path`."
-    yield from scan_worker(path, depth_first=True)
-
-
-def scanbreadth(path) -> Generator[ScanResult, None, None]:
-    "Breadth-first recursive scan of `path`."
-    yield from scan_worker(path, depth_first=False)
-
-
-def get_parent(path, max_depth=-1) -> FsDir:
     files, subdirs = [], []
-    for entry in os.scandir(path):
+    abspath = os.path.abspath(path)
+    for entry in os.scandir(abspath):
         if entry.is_dir(follow_symlinks=False):
-            if max_depth == 0:  # stop recursion
-                subdirs.append(FsDir(path=Path(entry)))
-            else:
-                subdirs.append(get_parent(entry, max_depth=max_depth - 1))
+            for next_subdir in scandepth(entry):
+                yield next_subdir
+            # because we are depth first, the last entry will be the original subdir
+            subdirs.append(next_subdir)
         else:
-            files.append(FsFile(path=Path(entry)))
-
-    files.sort(key=lambda x: x.abspath)
-    subdirs.sort(key=lambda x: x.abspath)
-
-    return FsDir(path=Path(path), files=files, subdirs=subdirs, loaded=True)
+            files.append(FsFile.new(entry))
+    yield FsDir.new(path=path, files=files, subdirs=subdirs)
