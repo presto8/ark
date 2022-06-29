@@ -2,15 +2,12 @@ import attr
 import msgpack
 import os
 from typing import Generator, Optional
-from . import crypto
+from src import crypto
+from src.utils import timestamp
 
 
 def flatten(input_list: list[str]) -> str:
     return ' '.join([x if ' ' not in x else f'"{x}"' for x in input_list])
-
-
-def timestamp(path: os.PathLike) -> int:
-    return os.lstat(path).st_mtime_ns
 
 
 @attr.define

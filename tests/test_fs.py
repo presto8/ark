@@ -2,16 +2,16 @@ import msgpack
 from src import crypto
 from src import fs
 from helpers import create_test_files, create_file
-from src.utils import dprint
+from src.utils import dprint, timestamp
 
 
 def test_mtime_change(tmp_path):
     testfile = tmp_path / "hello"
     create_file(testfile)
 
-    mtime1 = testfile.stat().st_mtime_ns
+    mtime1 = timestamp(testfile)
     testfile.touch()
-    mtime2 = testfile.stat().st_mtime_ns
+    mtime2 = timestamp(testfile)
 
     assert mtime1 != mtime2
 
@@ -85,7 +85,7 @@ def test_empty_dir(tmp_path):
     fsdir.update()
     assert fsdir.hash == crypto.blake2b(msgpack.packb([]))
     # ts of empty dir is the dir's ts
-    assert fsdir.ts == tmp_path.stat(follow_symlinks=False).st_mtime_ns
+    assert fsdir.ts == timestamp(tmp_path)
 
 
 def test_broken_link(tmp_path):
