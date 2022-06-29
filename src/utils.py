@@ -1,5 +1,6 @@
 import builtins
 import inspect
+import os
 import shutil
 import sys
 import time
@@ -10,6 +11,10 @@ from typing import Optional
 def dprint(*args, **kwargs):
     caller = inspect.stack()[1]
     builtins.print(f'\r<{caller.function}:{caller.lineno}>', *args, '\033[K', **kwargs, file=sys.stderr)
+
+
+def timestamp(path: os.PathLike) -> int:
+    return os.lstat(path).st_ctime_ns
 
 
 class OrderedCounter(Counter, OrderedDict):
