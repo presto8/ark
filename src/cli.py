@@ -5,7 +5,7 @@ import inspect
 import os
 import sys
 from pathlib import Path
-from . import ark
+from src import work
 
 HELP = """
 Safe by Preston Hunt <me@prestonhunt.com>
@@ -47,7 +47,7 @@ def parse_args(argv):
 
 
 def cli_mapper(args):
-    func = getattr(ark, args.command.replace("-", "_"))
+    func = getattr(work, args.command.replace("-", "_"))
     sig = inspect.signature(func)
     func_args = sig.parameters.keys()
     missing_args = [arg for arg in func_args if arg not in arg]
@@ -61,7 +61,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
-    args.noah = ark.Noah(safedir=args.safedir)
+    args.noah = work.Work(configdir=args.safedir)
     cli_mapper(args)
 
 
