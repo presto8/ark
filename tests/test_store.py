@@ -28,25 +28,16 @@ def test_store_basic(tmp_path):
 def test_match(tmp_path):
     s = store.Store(tmp_path / "store")
     t = SampleObj("/var/mnt/blah.txt", "blah", "foo", "bar")
-    result = s.put(t)
-    parts = result.split("_")
+    s.put(t)
 
-    return
+    m = s.match(["blah"])
+    assert m == [1]
 
-    m = s.match("blah")
-    assert sum(m) == 1
-    matching = m[0]
-    assert parts[0] in matching
+    m = s.match(["blah", "foo"])
+    assert m == [1, 1]
 
-    m = s.match("blah", "foo")
-    assert len(m) == 1
-    matching = m[0]
-    assert parts[0] in matching
-    assert parts[1] in matching
+    m = s.match(["blah", "foo", "bar"])
+    assert m == [1, 1, 1]
 
-    m = s.match("blah", "foo", "bar")
-    assert len(m) == 1
-    matching = m[0]
-    assert parts[0] in matching
-    assert parts[1] in matching
-    assert parts[2] in matching
+    m = s.match(["blah", "tad", "bar"])
+    assert m == [1, 0, 1]
