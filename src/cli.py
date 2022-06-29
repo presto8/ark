@@ -8,8 +8,8 @@ from pathlib import Path
 from . import ark
 
 HELP = """
-Ark by Preston Hunt <me@prestonhunt.com>
-https://github.com/presto8/ark
+Safe by Preston Hunt <me@prestonhunt.com>
+https://github.com/presto8/safe
 
 An experimental chunk-based backup program. This is a proof-of-concept
 implementation to explore concepts which may not be addressed fully in
@@ -19,22 +19,22 @@ currently available backup programs.
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--arkdir', default=os.environ.get('ARK_DIR'), help='location of ark config files')
+    parser.add_argument('--safedir', default=os.environ.get('SAFE_DIR'), help='location of Safe config files')
     parser.add_argument('--verbose', default=False, action='store_true', help='show more detailed messages')
     parser.add_argument('--debug', action='store_true')
 
     subparsers = parser.add_subparsers(dest='command')
 
-    # 'ark backup'
+    # 'safe backup'
     x = subparsers.add_parser('backup', help='backup pathspec (recursively descend dirs)')
     x.add_argument('pathspec', nargs='+', default=('.',), help="paths to process")
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
 
-    # 'ark init'
-    x = subparsers.add_parser('init', help='initialize an ark')
+    # 'safe init'
+    x = subparsers.add_parser('init', help='initialize a safe')
 
-    # 'ark info'
-    x = subparsers.add_parser('info', help='show information and statistics for this ark')
+    # 'safe info'
+    x = subparsers.add_parser('info', help='show information and statistics for this safe')
 
     args, unknown_args = parser.parse_known_args(argv)
     args.unknown_args = unknown_args

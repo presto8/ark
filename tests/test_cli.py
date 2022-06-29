@@ -21,8 +21,8 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-def run_cli(arkdir, args):
-    args += ["--arkdir", str(arkdir)]
+def run_cli(safedir, args):
+    args += ["--safedir", str(safedir)]
     print(args)
     with captured_output() as (out, err):
         try:
@@ -35,24 +35,24 @@ def run_cli(arkdir, args):
 
 def test_help():
     result = run_cli(None, "--help".split())
-    assert "Ark by Preston Hunt" in result.stdout
+    assert "Safe by Preston Hunt" in result.stdout
 
 
 def test_no_args():
     result = run_cli(None, "".split())
-    assert "Ark by Preston Hunt" in result.stdout
+    assert "Safe by Preston Hunt" in result.stdout
 
 
 def test_backup(tmp_path):
     return
-    ark = functools.partial(run_cli, tmp_path / "arkdir")
+    safe = functools.partial(run_cli, tmp_path / "safedir")
     files = tmp_path / "files"
     create_test_files(files, {"hello": "hola\n", "world": "mundo\n"})
 
-    result = ark(["backup", abspath(files)])
+    result = safe(["backup", abspath(files)])
     assert 'added' in result.stdout
 
-    result = ark(["backup", abspath(files)])
+    result = safe(["backup", abspath(files)])
     assert 'have' in result.stdout
 
     hello = files / "hello"
@@ -62,13 +62,13 @@ def test_backup(tmp_path):
     # Remaining tests temporarily disabled until I can figure out why they aren't passing
     return
 
-    result = ark(["backup", abspath(files)])
+    result = safe(["backup", abspath(files)])
     assert 'changed' in result.stdout
 
     # need a sleep here otherwise the test runs too quickly for the ctime to change
     time.sleep(0.01)
     hello.touch()
-    result = ark(["backup", abspath(files)])
+    result = safe(["backup", abspath(files)])
     assert 'ctime' in result.stdout
 
 

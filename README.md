@@ -1,6 +1,6 @@
 # Safe
 
-<img src="assets/safe.svg" alt="Image of a safe" align="right" style="width: 200px;" />
+<img src="assets/safe-icon.png" alt="Image of a safe" align="right" style="width: 150px;" />
 
 An experimental chunk-based backup program. Safe is a proof-of-concept
 implementation to explore concepts which may not be addressed fully in
@@ -9,7 +9,7 @@ currently available backup programs.
 The concepts to be tested include:
 
 - Backup and tracking to multiple destinations before reporting a file as
-  "protected"
+  "safe"
 - Mandatory use of asymmetric (public key) cryptography
 - Distributed peer-to-peer backup with friends and family
 - Cloud-first storage design for backup files, taking into account the unique

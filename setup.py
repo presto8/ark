@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='ark',
+    name='safe',
     version='0.1',
     python_requires='>=3.10',
     packages=find_packages(),
-    package_data={'ark': ['py.typed']},
+    package_data={'safe': ['py.typed']},
     include_package_data=True,
     install_requires=[
         'msgpack-python',
@@ -13,12 +13,12 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        ark=src.cli:entrypoint
+        safe=src.cli:entrypoint
     ''',
 
     author="Preston Hunt",
     author_email="me@prestonhunt.com",
-    description="Ark",
+    description="Safe",
     keywords="chunk chunk-based backup asymmetric public-key lockss",
-    url="https://github.com/presto8/ark",
+    url="https://github.com/presto8/safe",
 )
