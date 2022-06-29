@@ -4,18 +4,18 @@ from . import store
 
 
 class Noah:
-    def __init__(self, arkdir):
-        self.arkdir = self.resolve_arkdir(arkdir)
-        self.store = store.Store(os.path.join(self.arkdir, "store"))
+    def __init__(self, safedir):
+        self.safedir = self.resolve_arkdir(safedir)
+        self.store = store.Store(os.path.join(self.safedir, "store"))
         self.fs = fs.FsCache()
 
-    def resolve_arkdir(self, arkdir) -> os.PathLike:
-        if arkdir:
-            path = arkdir
+    def resolve_arkdir(self, safedir) -> os.PathLike:
+        if safedir:
+            path = safedir
         elif 'XDG_CONFIG_HOME' in os.environ:
-            path = os.path.join(os.environ['XDG_CONFIG_HOME'], 'ark')
+            path = os.path.join(os.environ['XDG_CONFIG_HOME'], 'safe')
         else:
-            path = os.path.join(os.environ['HOME'], '.config', 'ark')
+            path = os.path.join(os.environ['HOME'], '.config', 'safe')
         return os.path.abspath(path)
 
 

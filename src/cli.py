@@ -61,7 +61,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
-    args.noah = ark.Noah(arkdir=args.arkdir)
+    args.noah = ark.Noah(safedir=args.safedir)
     cli_mapper(args)
 
 
