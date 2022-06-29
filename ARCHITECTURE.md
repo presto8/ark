@@ -1,36 +1,52 @@
 # Linux Filesystem Theory
 
-Each filesystem entry has a stat object that contains a ctime (changed time).
-Whenever a filesystem entry's contents change, Linux updates the ctime. For a
-file, this means that any change to the file's contents will update the ctime.
-For directories, only adding or removing a file from the directory will update
-the directory's ctime. Changing the contents of an existing file will update
-that file's ctime but not the directory's ctime.
+All Linux files have the file contents itself and metadata about the file. The
+metadata (referred to as the stat object) includes a ctime (changed time) and
+an mtime (modified time). The ctime is updated whenever anything about the file
+changes, either its metadata or its contents. The mtime is updated only when
+the contents change.
 
-In order to backup efficiently, Ark updates the ctime of any directory to the
-newest ctime of any file in the directory with a newer ctime. This allows Ark
+Directories also have metadata but the contents of the directory are metadata
+about the directory structure. Only changes to the directory structure will
+change the mtime and ctime of the directory. Notably, changing the contents of
+a file, renaming a file, or changing the timestamps of a file will not change
+the directory structure, and thus will not change the directory's ctime.
+
+Whenever a
+filesystem entry's contents change, Linux updates the ctime. For a file, this
+means that any change to the file's contents will update the ctime. For
+directories, only adding or removing a file from the directory will update the
+directory's ctime. Changing the contents of an existing file will update that
+file's ctime but not the directory's ctime.
+
+In order to backup efficiently, Safe updates the ctime of any directory to the
+newest ctime of any file in the directory with a newer ctime. This allows Safe
 to use the ctime of the directory to know if the ctime of any object in the
 directory has changed.
 
 
 # Software layout
 
-Ark is comprised of the following components:
+Safe has the following components:
 
 - cli module: Parses command line arguments and provides command-line user
   interface
 
-- ark module: Main module that implements the backup. Metaphor: The ark is
-  where your files are stored safely.
+- work module: Main module that performs the operations by using the other
+  modules, maintaining state, and handling data transfer between the modues.
+  It is called by the cli module.
 
-    - noah: A class that maintains the necesary state for the ark module to
-      work. Metaphor: Noah is the person who load the ark for you and does all
-      the work of maintaining it.
+    - Work: A class that maintains the necesary state for the ark module to
+      work. This variable is passed to almost all worker functions.
 
 - fs module: interface to local filesystem entries (files and directories)
 
-- store module: Provides storage for objects. Metaphor: The storerooms of the
-  ark are where everything is stored.
+- store module: Provides storage for objects. Manages encryption. Manages files
+  on endpoints.
+
+- endpoint module: interface to the remote remote storage
+
+- crypto module: Provides cryptographic primitives.
 
 
 # Raw notes
