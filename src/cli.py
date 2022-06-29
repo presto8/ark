@@ -25,8 +25,8 @@ def parse_args(argv):
 
     subparsers = parser.add_subparsers(dest='command')
 
-    # 'safe backup'
-    x = subparsers.add_parser('backup', help='backup pathspec (recursively descend dirs)')
+    # 'safe add'
+    x = subparsers.add_parser('add', help='backup pathspec (recursively descend dirs)')
     x.add_argument('pathspec', nargs='+', default=('.',), help="paths to process")
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
 
