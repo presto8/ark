@@ -1,9 +1,7 @@
 import msgpack
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from src import crypto
-from types import SimpleNamespace
 from collections import Counter
 
 
