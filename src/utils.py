@@ -32,7 +32,7 @@ class StatusKeeper:
     operations as well as permanent messages for certain counter types. In
     printzero mode, only paths are printed and ephemeral messages are not
     shown."""
-    def __init__(self, preseed=None, total_files_expected=None, log=None, print0=False):
+    def __init__(self, preseed=None, total_files_expected=None, log=None, print0=False, ephemeral_reasons=""):
         self.log = log
         self.print0 = print0
         self.c = OrderedCounter()
@@ -40,7 +40,7 @@ class StatusKeeper:
             self.preseed(preseed)
         self.total_files_expected = total_files_expected
         self.progress_count = 0
-        self.ephemeral_reasons = "ignored already-known unchanged ok stat-updated".split()
+        self.ephemeral_reasons = ephemeral_reasons.split()
         self.is_tty = sys.stdout.isatty()
         self.tty_cols, _ = shutil.get_terminal_size()
         self.time_start = time.time()
@@ -48,7 +48,7 @@ class StatusKeeper:
     def preseed(self, preseed: list):
         self.c.update({x: 0 for x in preseed})
 
-    def __call__(self, reason, path, highlight=None, sha256=None, flags="", extra: Optional[str] = None, coverage=None):
+    def __call__(self, reason, path, highlight=None, flags="", extra: Optional[str] = None, coverage=None):
         self.c[reason] += 1
         try:
             path.encode()
@@ -63,10 +63,9 @@ class StatusKeeper:
             path = path.replace('\n', r"$'\n'")
         # if highlight and self.is_tty:
         #     path = utils.highlight(path, highlight)
-        sha256 = sha256 or "none"
         extra = f" {extra}" if extra else ""
         cov = f"[{coverage}] " if coverage is not None else ""
-        mesg = f"{reason:<16.16} {sha256:<8.8} {cov}{path}{extra}"
+        mesg = f"{reason:<16.16} {cov}{path}{extra}"
         if flags:
             mesg += " " + flags
         if reason in self.ephemeral_reasons:
