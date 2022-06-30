@@ -34,12 +34,12 @@ def run_cli(safedir, args):
 
 def test_help():
     result = run_cli(None, "--help".split())
-    assert "Safe by Preston Hunt" in result.stdout
+    assert "Store by Preston Hunt" in result.stdout
 
 
 def test_no_args():
     result = run_cli(None, "".split())
-    assert "Safe by Preston Hunt" in result.stdout
+    assert "Store by Preston Hunt" in result.stdout
 
 
 def test_backup(tmp_path):
