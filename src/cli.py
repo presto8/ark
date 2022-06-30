@@ -61,7 +61,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
-    args.noah = work.Work(configdir=args.safedir)
+    args.work = work.Work(configdir=args.safedir)
     cli_mapper(args)
 
 
