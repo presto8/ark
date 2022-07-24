@@ -16,6 +16,8 @@ The concepts to be tested include:
 - Cloud-first storage design for backup files, taking into account the unique
   characteristics of cloud storage providers
 - Optional use of hardware-based security keys like SoloKey or YubiKey
+- Offline cold-storage with PAR blocks
+- IPFS
 
 Store stands on the shoulders of and is motivated by the many pioneers in the
 chunk-based backup space, including borg, duplicacy, hashbackup, restic, and
@@ -28,12 +30,13 @@ kopia.
 Tentative list of major commands:
 
 * store [paths]: default operation is to backup the paths
+* store add [paths]: add or check paths
 * store restore [patterns] --to [path]
 * store verify [patterns]
-* store list | store ls
-* store find | store grep
+* store [list | ls] [patterns]
+* store [find | grep] [patterns
 * store remote
-* store status [paths]
+* store status [patterns]
 * store info
 
 ## Tech Stack
